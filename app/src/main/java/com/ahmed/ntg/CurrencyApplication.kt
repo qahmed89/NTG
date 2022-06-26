@@ -1,4 +1,4 @@
-package com.ahmed
+package com.ahmed.ntg
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

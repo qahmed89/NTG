@@ -9,9 +9,16 @@ import org.junit.Assert.*
  *
  * See [testing documentation](http://d.android.com/tools/testing).
  */
-class ExampleUnitTest {
-    @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
-    }
+fun main (){
+    val x = listOf(
+        "ADD",
+        "ASS",
+        "GGZ",
+        "KLS",
+        "ADN"
+    )
+    val xxx = "ADD"
+
+    val xx = x.filter { !it.contains(xxx) }
+    println(xx)
 }
