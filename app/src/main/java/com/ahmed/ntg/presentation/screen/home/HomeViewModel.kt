@@ -3,7 +3,6 @@ package com.ahmed.ntg.presentation.screen.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ahmed.ntg.common.Resource
-import com.ahmed.ntg.data.remote.dto.LatestDto
 import com.ahmed.ntg.domain.use_case.FixerUserCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,37 +24,31 @@ class HomeViewModel @Inject constructor(
     fun getSymbols(
 
     ) {
+        _state.value = _state.value.copy(isLoading = true, showNetworkScreen = false)
         viewModelScope.launch {
-
             val symbols = fixerUserCase.getSymbolsUseCase()
             when (symbols) {
                 is Resource.Success -> {
                     _state.value =
-                        _state.value.copy(isLoading = false, fromList = symbols.data?.symbols)
+                        _state.value.copy(
+                            isLoading = false,
+                            fromList = symbols.data?.symbols,
+                            toList = symbols.data?.symbols,
+                            showNetworkScreen = false
+                        )
                 }
                 is Resource.Error -> {
                     _state.value = _state.value.copy(
                         showNetworkScreen = true,
-                        fromList = listOf(
-                            "ADD",
-                            "ASS",
-                            "GGZ",
-                            "KLS",
-                            "ADN"
-                        ),
-                        toList = listOf(
-                            "ADD",
-                            "ASS",
-                            "GGZ",
-                            "KLS",
-                            "ADN"
-                        ),
                         isLoading = false
+                    )
+                }
+                is Resource.Loading -> {
+                    _state.value = _state.value.copy(
+                        isLoading = true
                     )
 
                 }
-
-
             }
         }
     }
@@ -63,27 +56,20 @@ class HomeViewModel @Inject constructor(
     fun getLatestForFromValue(base: String) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
-            val latest = fixerUserCase.getLatestUseCase()
+            val latest = fixerUserCase.getLatestUseCase(base)
             when (latest) {
                 is Resource.Success -> {
                     _state.value =
-                        _state.value.copy(isLoading = false, latest = latest.data)
+                        _state.value.copy(
+                            isLoading = false,
+                            latest = latest.data,
+                            showNetworkScreen = false
+                        )
+
                 }
                 is Resource.Error -> {
                     _state.value = _state.value.copy(
                         showNetworkScreen = true,
-                        latest = LatestDto(
-                            base = _state.value.fromSelectedValue,
-                            date = "2018-10-02",
-                            rates = mapOf<String, Double>(
-                                "ADD" to 10.255,
-                                "ASS" to 11.255,
-                                "GGZ" to 12.255,
-                                "KLS" to 13.255,
-                                "ADN" to 14.255
-                            )
-                        ),
-                        toList = _state.value.fromList?.filter { !it.contains(base) },
                         isLoading = false
                     )
 
@@ -108,19 +94,33 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    fun onFromValueChanged(value: Double, rates: Double) {
+    fun onFromValueChanged(value: Float, rates: Float) {
         viewModelScope.launch {
             _state.value = _state.value.copy(fromValue = value, toValue = rates * value)
         }
+    }
+
+    fun onToValueChanged(value: Float) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(toValue = value)
+        }
+
 
     }
 
 
-    fun updateBoth(fromValue: String, toValue: String) {
+    fun updateSelectionData(fromValue: String, toValue: String) {
 
         viewModelScope.launch {
+            val getLatest = fixerUserCase.getLatestUseCase(toValue)
             _state.value =
-                _state.value.copy(fromSelectedValue = toValue, ToSelectedValue = fromValue)
+                _state.value.copy(
+                    fromSelectedValue = toValue,
+                    ToSelectedValue = fromValue,
+                    latest = getLatest.data,
+                    toValue = _state.value.fromValue * getLatest.data?.rates?.get(fromValue)!!,
+                    fromValue = _state.value.fromValue
+                )
         }
     }
 }

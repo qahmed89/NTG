@@ -1,5 +1,7 @@
 package com.ahmed.ntg.presentation.screen
 
+import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,7 +16,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.ahmed.ntg.presentation.screen.details.Details
+import com.ahmed.ntg.presentation.screen.details.NAV_ROUTE_DETAILS_SCREEN
 import com.ahmed.ntg.presentation.screen.home.HomeViewModel
+import com.google.gson.Gson
+
+const val NAV_ROUTE_HOME_SCREEN = "HomeScreen"
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -23,10 +30,6 @@ fun HomeScreen(
     navHostController: NavHostController
 ) {
     val state by viewModel.state.collectAsState()
-    var showDropDownList by remember {
-        mutableStateOf(false)
-    }
-
 
     if (state.isLoading) {
         Box(
@@ -36,6 +39,13 @@ fun HomeScreen(
         ) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
 
+        }
+        return
+    }
+
+    if (state.showNetworkScreen){
+        ErrorScreen(navHostController = navHostController) {
+            viewModel.getSymbols()
         }
         return
     }
@@ -65,13 +75,11 @@ fun HomeScreen(
                 viewModel.getLatestForFromValue(it)
             }
             Button(onClick = {
-                viewModel.updateBoth(state.fromSelectedValue, state.ToSelectedValue)
-                viewModel.onFromValueChanged(
-                    state.fromValue,
-                    rates = state.latest?.rates?.get(state.fromSelectedValue)!!
-
+                viewModel.updateSelectionData(
+                    fromValue = state.fromSelectedValue,
+                    toValue = state.ToSelectedValue,
                 )
-                viewModel.getLatestForFromValue(state.fromSelectedValue)
+
 
             }) {
                 Text(text = "Switch")
@@ -79,14 +87,13 @@ fun HomeScreen(
             CountrySelection(
                 label = "To",
                 textx = state.ToSelectedValue,
-                list = state.toList ?: emptyList()) {
-                viewModel.onFromValueChanged(
-                    if (state.fromValue != 0.0) {
-                        state.fromValue
-                    } else 0.0,
-                    rates = state.latest?.rates?.get(it)!!
-                )
+                list = state.toList ?: emptyList()
+            ) {
                 viewModel.onToSelectedChanged(it)
+                viewModel.onToValueChanged(
+                    value = state.fromValue * state.latest?.rates?.get(it)!!,
+                )
+                Log.i("Rates", "${state.latest?.rates?.get(it)}")
 
             }
 
@@ -110,10 +117,8 @@ fun HomeScreen(
                 onValueChange = {
 
                     viewModel.onFromValueChanged(
-                        if (it.isNotBlank()) {
-                            it.toDoubleOrNull() ?: it.toDouble()
-                        } else 0.0,
-                        rates = state.latest?.rates?.get(state.fromSelectedValue)!!
+                        value = it.toFloat(),
+                        rates = state.latest?.rates?.get(state.ToSelectedValue) ?: 1f
                     )
                     //new value
 
@@ -135,7 +140,25 @@ fun HomeScreen(
 
         }
 
-        Button(onClick = { /*TODO*/ }) {
+        Button(
+            enabled = state.fromSelectedValue.isNotBlank() && state.ToSelectedValue.isNotBlank(),
+            onClick = {
+                val json = Uri.encode(
+                    Gson().toJson(
+                        Details(
+                            fromBase = state.fromSelectedValue,
+                            fromValue = state.fromValue,
+                            toBase = state.ToSelectedValue,
+                            toValue = state.toValue
+                        )
+                    )
+                )
+
+                navHostController.navigate(
+                    "${NAV_ROUTE_DETAILS_SCREEN}/${json}"
+                )
+
+            }) {
             Text(text = "Details", color = Color.Black)
         }
 
@@ -158,15 +181,15 @@ fun DropDownList(
         expanded = requestToOpen,
         onDismissRequest = { request(false) },
     ) {
-        list.forEach {
+        list.forEachIndexed { index, s ->
             DropdownMenuItem(
                 modifier = Modifier,
                 onClick = {
                     request(false)
-                    selectedString(it)
+                    selectedString(s)
                 }
             ) {
-                Text(it, modifier = Modifier.wrapContentWidth())
+                Text(s, modifier = Modifier.wrapContentWidth())
             }
         }
     }
@@ -180,7 +203,7 @@ fun CountrySelection(
     onValueChanged: (String) -> Unit
 ) {
     val countryList = remember {
-     mutableStateOf<List<String>>(emptyList())
+        mutableStateOf<List<String>>(emptyList())
     }
     countryList.value = list
     val text = remember { mutableStateOf("") }

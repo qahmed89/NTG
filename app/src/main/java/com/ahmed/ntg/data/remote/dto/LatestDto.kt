@@ -5,5 +5,5 @@ import java.util.*
 data class LatestDto(
     val base : String,
     val date: String,
-    val rates : Map<String, Double>
+    val rates : Map<String, Float>
 )

@@ -7,8 +7,8 @@ data class HomeState(
     val fromList: List<String>? = emptyList(),
     val toList: List<String>? = emptyList(),
     val latest: LatestDto? = null,
-    val fromValue: Double = 1.0,
-    val toValue: Double = 1.0,
+    val fromValue: Float = 1f,
+    val toValue: Float = 1f,
     val fromSelectedValue: String = "",
     val ToSelectedValue: String = "",
     val showNetworkScreen: Boolean = false

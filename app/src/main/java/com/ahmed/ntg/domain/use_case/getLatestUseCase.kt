@@ -9,7 +9,7 @@ class getLatestUseCase @Inject constructor(
     private val fixerRepository: FixerRepository
 ) {
 
-    suspend operator fun invoke(): Resource<LatestDto> {
-        return fixerRepository.getLatest()
+    suspend operator fun invoke(base:String): Resource<LatestDto> {
+        return fixerRepository.getLatest(base)
     }
 }
