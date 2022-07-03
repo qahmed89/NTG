@@ -1,7 +1,6 @@
 package com.ahmed.ntg.presentation.screen
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -43,7 +42,7 @@ fun HomeScreen(
         return
     }
 
-    if (state.showNetworkScreen){
+    if (state.showNetworkScreen) {
         ErrorScreen(navHostController = navHostController) {
             viewModel.getSymbols()
         }
@@ -66,7 +65,7 @@ fun HomeScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()
         ) {
-            CountrySelection(
+            SymbolsSelection(
                 label = "From",
                 textx = state.fromSelectedValue,
                 list = state.fromList ?: emptyList()
@@ -84,7 +83,7 @@ fun HomeScreen(
             }) {
                 Text(text = "Switch")
             }
-            CountrySelection(
+            SymbolsSelection(
                 label = "To",
                 textx = state.ToSelectedValue,
                 list = state.toList ?: emptyList()
@@ -93,8 +92,6 @@ fun HomeScreen(
                 viewModel.onToValueChanged(
                     value = state.fromValue * state.latest?.rates?.get(it)!!,
                 )
-                Log.i("Rates", "${state.latest?.rates?.get(it)}")
-
             }
 
         }
@@ -120,8 +117,6 @@ fun HomeScreen(
                         value = it.toFloat(),
                         rates = state.latest?.rates?.get(state.ToSelectedValue) ?: 1f
                     )
-                    //new value
-
                 },
                 enabled = state.fromSelectedValue.isNotBlank() && state.ToSelectedValue.isNotBlank()
 
@@ -154,9 +149,7 @@ fun HomeScreen(
                     )
                 )
 
-                navHostController.navigate(
-                    "${NAV_ROUTE_DETAILS_SCREEN}/${json}"
-                )
+                navHostController.navigate("${NAV_ROUTE_DETAILS_SCREEN}/${json}")
 
             }) {
             Text(text = "Details", color = Color.Black)
@@ -196,7 +189,7 @@ fun DropDownList(
 }
 
 @Composable
-fun CountrySelection(
+fun SymbolsSelection(
     label: String,
     textx: String,
     list: List<String>,
